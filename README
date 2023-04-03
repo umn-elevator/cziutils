@@ -1,0 +1,2 @@
+docker build --platform linux/amd64 -t czi .
+docker run -it --platform linux/amd64 -v `pwd`:/root/ czi
