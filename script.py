@@ -6,6 +6,8 @@ from tifffile import memmap, imread
 import xml.etree.ElementTree as ET
 import html
 import sys
+import numpy as np
+import time
 
 inputfile = sys.argv[1]
 outputfile = sys.argv[2]
@@ -121,12 +123,12 @@ print("Smallest X", smallestXValue, "Smallest Y", smallestYValue)
 memmap_image = memmap(
     outputfile,
     shape=(maxHeight, maxWidth, 3),
-    dtype='int8',
+    dtype='uint8',
     photometric='rgb'
 )
 
 
-i = 0
+
 for y in sorted(imageInfo.keys()):
     for x in sorted(imageInfo[y].keys()):
         imageData = imageInfo[y][x]
@@ -135,13 +137,11 @@ for y in sorted(imageInfo.keys()):
         start_x = imageData["start_x"]
         size_x = imageData["size_x"]
         size_y = imageData["size_y"]
-        image  = czi.read_image(M=imageData["tile"], cores=3)
-        reordered_image = image[0][..., ::-1]
-        re_gamma = 255.0 * (reordered_image / 255.0)**(1 / 1.8)
-        # print(output.shape)
-
+    
+        image  = czi.read_image(M=imageData["tile"], cores=8)
+        numpyArray = np.array(image[0])
+        reordered_image = numpyArray[..., ::-1]
+        re_gamma = (255.0 * (reordered_image.astype(np.float32) / 255.0)**(1 / 1.8)).astype(np.uint8)
         memmap_image[start_y:start_y + size_y, start_x:start_x+size_x] = re_gamma[0:size_y, 0:size_x]
-        # del image
 # Save the final composite image
-# tifffile.imwrite('composite.tiff', output, bigtiff=True)
 memmap_image.flush()
