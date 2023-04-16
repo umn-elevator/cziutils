@@ -92,10 +92,10 @@ for y in imageInfo.keys():
         biggestXValue = max(biggestXValue, abs(imageInfo[y][x]["start_x"]))
         biggestYValue = max(biggestYValue, abs(imageInfo[y][x]["start_y"]))
 
-
+totalImages = 0
 for y in imageInfo.keys():
     for x in imageInfo[y].keys():
-
+        totalImages = totalImages + 1
         if imageInfo[y][x]["start_x"] < 0:
             imageInfo[y][x]["start_x"] = imageInfo[y][x]["start_x"] + abs(smallestXValue)
         else:
@@ -128,7 +128,7 @@ memmap_image = memmap(
 )
 
 
-
+completed = 0
 for y in sorted(imageInfo.keys()):
     for x in sorted(imageInfo[y].keys()):
         imageData = imageInfo[y][x]
@@ -143,5 +143,7 @@ for y in sorted(imageInfo.keys()):
         reordered_image = numpyArray[..., ::-1]
         re_gamma = (255.0 * (reordered_image.astype(np.float32) / 255.0)**(1 / 1.8)).astype(np.uint8)
         memmap_image[start_y:start_y + size_y, start_x:start_x+size_x] = re_gamma[0:size_y, 0:size_x]
+        completed = completed + 1
+        print("Percent Done: ", (completed / totalImages) * 100, "%", end="\r")
 # Save the final composite image
 memmap_image.flush()
