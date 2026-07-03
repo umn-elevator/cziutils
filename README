@@ -1,2 +1,29 @@
-docker build --platform linux/amd64 -t czi .
-docker run -it --platform linux/amd64 -v `pwd`:/root/ czi
+czi2tif: convert a Zeiss CZI mosaic to a compact tiled JPEG BigTIFF.
+
+The container streams the CZI one tile-row at a time (bounded memory) and
+writes a tiled, JPEG-compressed (Q90) BigTIFF with a 1/1.8 gamma applied.
+This TIFF is a small, fast-to-produce intermediate meant to feed a downstream
+pyramid/retiling pipeline (e.g. libvips); it is not the final deliverable.
+
+Reader: upstream `czifile` package (cloned from GitHub during Docker build).
+
+Build:
+    docker build --platform linux/amd64 -t czi .
+
+Build with czifile pinned to a specific release tag:
+    docker build --platform linux/amd64 -t czi \
+    --build-arg CZIFILE_REF=v2026.6.12 .
+
+Optional build args:
+    CZIFILE_REPO (default: https://github.com/cgohlke/czifile.git)
+    CZIFILE_REF  (release tag, branch, or commit; default: v2026.6.12)
+
+Run (paths are relative to the mounted working directory):
+    docker run -it --platform linux/amd64 -v `pwd`:/root/ czi input.czi output.tif
+
+If the output path is omitted, `input.czi.tif` is written next to the input.
+
+Run without Docker:
+    pip install -r requirements.txt
+    pip install "git+https://github.com/cgohlke/czifile.git@v2026.6.12"
+    python3 czi2tif.py input.czi output.tif
